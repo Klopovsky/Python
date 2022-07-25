@@ -17,3 +17,8 @@ for url in ['https://api.github.com', 'https://api.github.com/invalid']:
 #print(requests.get(url))
 response = requests.get(url)
 print(response.status_code)
+print(response.headers)
+print(response.cookies)
+print(response.request)
+print(response.raw)
+print(response._content)
