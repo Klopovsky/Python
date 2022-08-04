@@ -20,16 +20,10 @@ def get_html(url):
     driver = webdriver.Chrome(options=options, service=s)
 
     try:
-        #driver.request_interceptor = headers.interceptor
+        
         driver.get(url)
-        wait = WebDriverWait(driver, 10)
-        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "collapsible__toggle-wrap")))
-
-        element = driver.find_element(By.XPATH, "//*[contains(text(), 'Развернуть характеристики')]")
-        driver.execute_script("arguments[0].click();", element)
-        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Свернуть характеристики')]")))
+        wait = WebDriverWait(driver, 5)
         html = driver.page_source
-        print(element)
     except Exception as ex:
         print(ex)
         html = None
