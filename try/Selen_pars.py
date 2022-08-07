@@ -1,6 +1,8 @@
 
+from ast import Break
 from csv import writer
 import csv
+from types import NoneType
 from selenium import webdriver
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -15,14 +17,13 @@ from bs4 import BeautifulSoup
 
 DRIVE_PATH = "D:/chromedriver.exe"
 
+options = webdriver.ChromeOptions()
+options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36")
+s = Service(executable_path = DRIVE_PATH)
+web_driver = webdriver.Chrome(options=options, service=s)
+
 def get_html(url):
-    options = webdriver.ChromeOptions()
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36")
     
-    s = Service(executable_path = DRIVE_PATH)
-
-    web_driver = webdriver.Chrome(options=options, service=s)
-
     try:
         
         web_driver.get(url)
@@ -34,33 +35,49 @@ def get_html(url):
     except Exception as ex:
         print(ex)
         html = None
-    finally:
         web_driver.close()
         web_driver.quit()
+    # finally:
+    #     web_driver.close()
+    #     web_driver.quit()
     return html
 
-html = get_html('https://www.wildberries.ru/catalog/elektronika/smartfony-i-telefony/vse-smartfony')
+def parce_html (html):
+    try:
+        soup = BeautifulSoup(html, 'html.parser')
+    
+        products = soup.find_all("div",{"class":"product-card__brand"})
 
-# def parce_html (html):
-soup = BeautifulSoup(html, 'html.parser')
-cls = 'product-card j-card-item j-good-for-listing-event'
-products = soup.find_all("div",{"class":"product-card__brand"})
+        products_list =[]
 
-products_list =[]
+        for product in products:
+            #print(product.attrs)
+            name = product.find("div",{"class":"product-card__brand-name"}).text
+            price = product.find(["ins","span"],{"class":"lower-price"}).text.encode('ascii',errors='ignore').decode()
+            products_list.append([name, price])
+        
 
-for product in products:
-    #print(product.attrs)
-    name = product.find("div",{"class":"product-card__brand-name"}).text
-    price = product.find("div",{"class":"product-card__price j-cataloger-price"}).find("span",{"class":"price"}).text.encode('ascii',errors='ignore')#.find("ins",{"class":"lower-price"}).text.encode('ascii',errors='ignore')
-    products_list.append([name, price])
-    #print(price)
+        head = ["name","Price"]
 
-head = ["name","Price"]
+        with open("data.csv","a", newline='') as outFile:
+            writer = csv.writer(outFile, delimiter=',')
+            writer.writerow(head)
+            for product in products_list:
+                writer.writerow(product)
+    except Exception as ex:
+        print("Failure parsing!")
 
-with open("data.csv","w", newline='') as outFile:
-    writer = csv.writer(outFile, delimiter=',')
-    writer.writerow(head)
-    for product in products_list:
-        writer.writerow(product)
+i = 1
+html = 0
+while True:
+    html = get_html(f'https://www.wildberries.ru/catalog/elektronika/smartfony-i-telefony/vse-smartfony?sort=priceup&page={i}')
+    print(f'https://www.wildberries.ru/catalog/elektronika/smartfony-i-telefony/vse-smartfony?sort=priceup&page={i}')
+    if html == None:
+        Break()
+    parce_html(html)
+    i+=10
+
+web_driver.close()
+web_driver.quit()
 print('ggggg')
 
